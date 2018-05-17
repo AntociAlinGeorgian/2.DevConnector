@@ -7,6 +7,10 @@ const keys = require('../../config/keys');
 const passport = require('passport');
 
 
+//load input validation
+const validateRegisterInput = require('../../validation/register');
+
+
 // Load user model
 const User = require('../../models/User');
 
@@ -24,14 +28,25 @@ router.get("/test", (req, res) =>
 // @desc    Register user
 // @access  Public
 router.post('/register', (req, res) => {
+    const {
+        errors,
+        isValid
+    } = validateRegisterInput(req.body);
+
+    //check validation
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
+
     //check if email already exists
     User.findOne({
             email: req.body.email
         })
         .then(user => {
+            errors.email = 'Email already exists';
             if (user) {
                 return res.status(400).json({
-                    email: 'Email already exists'
+                    email
                 });
             } else {
                 const avatar = gravatar.url(req.body.email, {
